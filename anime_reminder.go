@@ -1,12 +1,12 @@
 package main
 
-import "regexp"
-
-import "strconv"
-
-import "net/http"
-import "io/ioutil"
-import "fmt"
+import (
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"regexp"
+	"strconv"
+)
 
 const onePieceURL string = "http://www.onepiece.cc/comic"
 

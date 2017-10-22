@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 )
@@ -12,19 +14,33 @@ const onePieceURL string = "http://www.onepiece.cc/comic"
 
 var nextIssueRegex = regexp.MustCompile(`<p\s+class\s*=\s*"next"\s*>\s*第(\d+)话\s+预计(\d+)月(\d+)日.*</p>`)
 
-type issueInfo struct {
-	issueNo  string
-	nextDate myDate
+type IssueInfo struct {
+	IssueNo  string
+	NextDate MyDate
 }
 
-type myDate struct {
-	month int
-	day   int
+type MyDate struct {
+	Month int
+	Day   int
 }
 
 func main() {
 
+	//first time and afer reminding
 	updateInfo()
+
+	//just first time
+	registService()
+
+	b, _ := ioutil.ReadFile("conf.json")
+	ii := IssueInfo{}
+	json.Unmarshal(b, &ii)
+
+	fmt.Println(ii.IssueNo)
+
+}
+
+func registService() {
 
 }
 
@@ -47,14 +63,15 @@ func updateInfo() {
 		m, _ := strconv.Atoi(cg[2])
 		d, _ := strconv.Atoi(cg[3])
 
-		ii := issueInfo{
-			issueNo: cg[1],
-			nextDate: myDate{
-				month: m,
-				day:   d,
+		ii := IssueInfo{
+			IssueNo: cg[1],
+			NextDate: MyDate{
+				Month: m,
+				Day:   d,
 			},
 		}
 
-		fmt.Println(ii)
+		bb, _ := json.Marshal(ii)
+		ioutil.WriteFile("conf.json", bb, os.ModePerm)
 	}
 }

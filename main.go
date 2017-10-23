@@ -11,6 +11,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/cfkxzsat/one-piece-reminder/reminder"
 )
 
 const (
@@ -24,7 +26,7 @@ type TextRequestBody struct {
 	CreateTime   time.Duration
 	MsgType      string
 	Content      string
-	MsgId        int
+	MsgID        int
 }
 
 func makeSignature(timestamp, nonce string) string {
@@ -110,10 +112,11 @@ func parseTextRequestBody(r *http.Request) *TextRequestBody {
 }
 
 func init() {
-	UpdateInfo()
+	reminder.UpdateInfo()
 }
 
 func main() {
+	reminder.UpdateInfo()
 	log.Println("Wechat Service: Start!")
 	http.HandleFunc("/", procRequest)
 	err := http.ListenAndServe(":80", nil)

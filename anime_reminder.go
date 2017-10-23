@@ -24,27 +24,7 @@ type MyDate struct {
 	Day   int
 }
 
-func main() {
-
-	//first time and afer reminding
-	updateInfo()
-
-	//just first time
-	registService()
-
-	b, _ := ioutil.ReadFile("conf.json")
-	ii := IssueInfo{}
-	json.Unmarshal(b, &ii)
-
-	fmt.Println(ii.IssueNo)
-
-}
-
-func registService() {
-
-}
-
-func updateInfo() {
+func UpdateInfo() {
 	req, _ := http.NewRequest("GET", onePieceURL, nil)
 	res, _ := http.DefaultClient.Do(req)
 	if res.StatusCode == 200 {
@@ -74,4 +54,10 @@ func updateInfo() {
 		bb, _ := json.Marshal(ii)
 		ioutil.WriteFile("conf.json", bb, os.ModePerm)
 	}
+
+	b, _ := ioutil.ReadFile("conf.json")
+	ii := IssueInfo{}
+	json.Unmarshal(b, &ii)
+
+	fmt.Println(ii.IssueNo)
 }

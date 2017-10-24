@@ -1,17 +1,19 @@
-package reminder
+package main
 
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"regexp"
 	"strconv"
 	"time"
 
-	"github.com/cfkxzsat/one-piece-reminder/wechat"
+	"github.com/cfkxzsat/one-piece-reminder/submail"
 )
 
-const onePieceURL string = "http://www.one-piece.cn/comic"
+const onePieceURL string = "http://www.one-piece.cn"
+const listURL string = "/comic"
 
 var nextIssueRegex = regexp.MustCompile(`<p\s+class\s*=\s*"next"\s*>\s*第(\d+)话\s+预计(\d+)月(\d+)日.*</p>`)
 
@@ -29,11 +31,11 @@ var ii IssueInfo
 
 func getHTMLStr() string {
 
-	req, _ := http.NewRequest("GET", onePieceURL, nil)
+	req, _ := http.NewRequest("GET", onePieceURL+listURL, nil)
 	res, _ := http.DefaultClient.Do(req)
 
 	for res.StatusCode != 200 {
-		req, _ = http.NewRequest("GET", onePieceURL, nil)
+		req, _ = http.NewRequest("GET", onePieceURL+listURL, nil)
 		res, _ = http.DefaultClient.Do(req)
 	}
 
@@ -71,29 +73,45 @@ func UpdateInfo() {
 
 }
 
-func Run() {
+func main() {
 	//	b, _ := ioutil.ReadFile("conf.json")
 	//	json.Unmarshal(b, &ii)
 
 	UpdateInfo()
 
+	//for SMS
+	//	submail.Notify(ii.IssueNo, "四皇预料之外", "https://one-piece.cn/post/10882/")
+
 	for {
 		now := time.Now()
-		next := time.Date(now.Year(), ii.NextDate.Month, ii.NextDate.Day, 0, 0, 0, 0, nil)
-		//When around the last few days of the year, it is likely that we get a wrong date if we use the year of the current time.Should set the new year for next
-		if now.After(next) {
-			next = time.Date(now.Year()+1, ii.NextDate.Month, ii.NextDate.Day, 0, 0, 0, 0, nil)
+		location, err := time.LoadLocation("Asia/Shanghai")
+		if err != nil {
+			log.Println(err)
 		}
+		fmt.Println(location.String())
+		next := time.Date(now.Year(), ii.NextDate.Month, ii.NextDate.Day, 0, 0, 0, 0, location)
+		//When around the last few days of the year, it is likely that we get a wrong date if we use the year of the current time.Should set the new year for next
 
+		//for test
+		// fmt.Println("next:", next)
+		// fmt.Println("now:", now)
+
+		if now.After(next) {
+			next = time.Date(now.Year()+1, ii.NextDate.Month, ii.NextDate.Day, 0, 0, 0, 0, location)
+		}
+		fmt.Println("I'm about to sleep")
 		time.Sleep(next.Sub(now))
+		fmt.Println("I awake now")
 
 		ticker := time.NewTicker(time.Minute * 30)
 		for {
 			<-ticker.C
 			if title, link, have := haveNewIssue(); have {
-				wechat.SendNotification(ii.IssueNo, title, link)
+				//wechat.SendNotification(ii.IssueNo, title, link)
+				submail.Notify(ii.IssueNo, title, link)
 				break
 			}
+			fmt.Println("still not update...")
 		}
 
 		UpdateInfo()
@@ -115,5 +133,5 @@ func haveNewIssue() (title, link string, have bool) {
 	//for test
 	fmt.Println("link:", link)
 	fmt.Println("title:", title)
-	return title, link, true
+	return title, onePieceURL + link, true
 }

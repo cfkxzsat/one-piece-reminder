@@ -53,8 +53,6 @@ func UpdateInfo() {
 
 	ptag := nextIssueRegex.FindString(htmlStr)
 
-	//	s := `<p class="next"> 第883话 预计10月27日晚上更新</p>`
-	//	b := nextIssueRegex.MatchString(s) //Q:tab also match \s...
 	cg := nextIssueRegex.FindStringSubmatch(ptag) //stands for capture group [0] whole string [1] issue num [2] month [3] year
 
 	m, _ := strconv.Atoi(cg[2])
@@ -67,20 +65,11 @@ func UpdateInfo() {
 			Day:   d,
 		},
 	}
-
-	// bb, _ := json.Marshal(ii)
-	// ioutil.WriteFile("conf.json", bb, os.ModePerm)
-
 }
 
 func main() {
-	//	b, _ := ioutil.ReadFile("conf.json")
-	//	json.Unmarshal(b, &ii)
 
 	UpdateInfo()
-
-	//for SMS
-	//	submail.Notify(ii.IssueNo, "四皇预料之外", "https://one-piece.cn/post/10882/")
 
 	for {
 		now := time.Now()
@@ -88,13 +77,8 @@ func main() {
 		if err != nil {
 			log.Println(err)
 		}
-		fmt.Println(location.String())
 		next := time.Date(now.Year(), ii.NextDate.Month, ii.NextDate.Day, 0, 0, 0, 0, location)
 		//When around the last few days of the year, it is likely that we get a wrong date if we use the year of the current time.Should set the new year for next
-
-		//for test
-		// fmt.Println("next:", next)
-		// fmt.Println("now:", now)
 
 		if now.After(next) {
 			next = time.Date(now.Year()+1, ii.NextDate.Month, ii.NextDate.Day, 0, 0, 0, 0, location)
@@ -107,7 +91,6 @@ func main() {
 		for {
 			<-ticker.C
 			if title, link, have := haveNewIssue(); have {
-				//wechat.SendNotification(ii.IssueNo, title, link)
 				submail.Notify(ii.IssueNo, title, link)
 				break
 			}
@@ -130,8 +113,5 @@ func haveNewIssue() (title, link string, have bool) {
 	cg := nextIssueRegex.FindStringSubmatch(atag)
 	link = cg[1]
 	title = cg[2]
-	//for test
-	fmt.Println("link:", link)
-	fmt.Println("title:", title)
 	return title, onePieceURL + link, true
 }
